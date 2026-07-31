@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Pico Debug (OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "gdbPath": "/usr/bin/gdb-multiarch",
+            "executable": "${workspaceFolder}/build/us_sonar_v3.elf",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/rp2350.cfg"
+            ],
+            "searchDir": [],
+            "runToEntryPoint": "main"
+        }
+    ]
+}

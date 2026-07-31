@@ -1,0 +1,24 @@
+{
+  "name": "Pico 2 W - FreeRTOS SMP Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "cmake.cmakePath": "/usr/bin/cmake",
+        "cmake.generator": "Ninja",
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+      },
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools",
+        "raspberry-pi.raspberry-pi-pico"
+      ]
+    }
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "remoteUser": "root"
+}
