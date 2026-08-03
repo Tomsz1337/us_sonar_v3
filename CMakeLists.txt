@@ -5,13 +5,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PICO_BOARD pico2_w CACHE STRING "Board type")
 set(PICO_SDK_PATH "/opt/pico-sdk")
-#set(FREERTOS_KERNEL_PATH "/opt/FreeRTOS-Kernel")
+
+set(FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/config" CACHE STRING "" FORCE)
 
 include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 include(config/FreeRTOS_Kernel_import.cmake)
 
 project(us_sonar_v3 C CXX ASM)
 pico_sdk_init()
+
+include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}/config
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+
+add_subdirectory(utils)
+add_subdirectory(hal)
+add_subdirectory(tests)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
@@ -28,17 +38,13 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/config
-    ${CMAKE_CURRENT_LIST_DIR}
-)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib
     pico_multicore
     pico_cyw43_arch_lwip_sys_freertos
     FreeRTOS-Kernel
     FreeRTOS-Kernel-Heap4
+    hal
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})
