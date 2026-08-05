@@ -1,0 +1,51 @@
+.program onewire
+.side_set 1 opt pindirs
+
+public reset:
+    set x, 29               side 1      
+reset_low:
+    jmp x-- reset_low [7]   side 1     
+    set x, 3                side 0      
+wait_p:
+    jmp x-- wait_p [7]      side 0      
+    in pins, 1              side 0     
+    push block              side 0      
+    set x, 25               side 0      
+r_rec:
+    jmp x-- r_rec [7]       side 0     
+wait_next_cmd:
+    jmp wait_next_cmd       side 0      
+
+public write_byte:
+    pull block              side 0      
+    set y, 7                side 0      
+bit_loop:
+    out x, 1                side 0      
+    jmp !x write_zero       side 0      
+    nop                     side 1      
+    set x, 26               side 0      
+w1_high:
+    jmp x-- w1_high         side 0     
+    jmp bit_next            side 0      
+write_zero:
+    set x, 28               side 1      
+w0_low:
+    jmp x-- w0_low          side 1      
+    nop                     side 0 [1]  
+bit_next:
+    jmp y-- bit_loop        side 0     
+    jmp write_byte          side 0     
+
+public read_byte:
+    set y, 7                side 0     
+read_loop:
+    nop                     side 1     
+    nop                     side 0 [4]  
+    in pins, 1              side 0      
+    set x, 24               side 0      
+read_delay:
+    jmp x-- read_delay      side 0      
+    jmp y-- read_loop       side 0         
+    push block              side 0      
+halt_loop:
+    jmp halt_loop           side 0      

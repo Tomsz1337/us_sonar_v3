@@ -12,9 +12,7 @@ void vI2CScannerTask(void *pvParameters)
 
     while(true) 
     {
-        printf("\n=============================================\n");
-        printf("--- Rozpoczynam skanowanie magistrali I2C ---\n");
-        printf("=============================================\n");
+        printf("\n--- Starting I2C bus scan ---\n");
 
         int devices_found = 0;
 
@@ -26,18 +24,18 @@ void vI2CScannerTask(void *pvParameters)
 
             if(result >= 0) 
             {
-                printf("  [+] Wykryto urządzenie I2C pod adresem: 0x%02X\n", addr);
+                printf("  [+] Found I2C device at address: 0x%02X\n", addr);
                 devices_found++;
             }
         }
 
         if(devices_found == 0) 
         {
-            printf("  [-] Nie znaleziono żadnych urządzeń I2C.\n");
-            printf("      (Upewnij się, że piny SDA/SCL są podłączone i masz pull-upy)\n");
-        }else{
-            printf("---------------------------------------------\n");
-            printf("--- Skanowanie zakończone. Znaleziono: %d ---\n", devices_found);
+            printf("  [-] No I2C devices found.\n");
+        } 
+        else 
+        {
+            printf("--- Scan complete. Devices found: %d ---\n", devices_found);
         }
 
         vTaskDelay(pdMS_TO_TICKS(5000));
@@ -49,31 +47,33 @@ int main()
     stdio_init_all();
 
     I2CHal::Config i2c_config = {
-        .i2c      = i2c0,      
-        .baudrate = 100'000,  
-        .sda_pin  = 4,        
-        .scl_pin  = 5         
+        .i2c      = i2c0,
+        .baudrate = 100'000,
+        .sda_pin  = 0,
+        .scl_pin  = 1
     };
 
     static I2CHal i2c_bus(i2c_config);
 
-    if (!i2c_bus.init()) {
-        printf("BŁĄD: Nie udało się zainicjalizować I2CHal (błąd utworzenia Mutexa)!\n");
-        while (true) {
+    if(!i2c_bus.init()) 
+    {
+        printf("ERROR: Failed to initialize I2CHal (Mutex creation error)!\n");
+        while(true) 
+        {
             tight_loop_contents();
         }
     }
 
     xTaskCreate(
-        vI2CScannerTask,       
-        "I2C_Scanner",         
-        1024,                  
-        &i2c_bus,              
-        tskIDLE_PRIORITY + 1,  
-        nullptr                
+        vI2CScannerTask,
+        "I2C_Scanner",
+        1024,
+        &i2c_bus,
+        tskIDLE_PRIORITY + 1,
+        nullptr
     );
 
     vTaskStartScheduler();
 
-    while (true) {}
+    while(true) {}
 }
