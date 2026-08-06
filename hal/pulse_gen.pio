@@ -1,0 +1,11 @@
+.program pulse_gen
+pull
+mov x, osr
+set pins, 1
+
+loop:
+    set pins, 0 [1]
+    set pins, 1 [0]
+    jmp x--, loop
+
+set pins, 1
