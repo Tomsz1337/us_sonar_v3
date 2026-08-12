@@ -22,7 +22,7 @@ public:
     I2CHal(const I2CHal&) = delete;
     I2CHal& operator=(const I2CHal&) = delete;
 
-    explicit I2CHal(const Config &config);
+    explicit I2CHal(i2c_inst_t *i2c, uint baudrate, uint sda_pin, uint scl_pin);
     ~I2CHal();
 
     bool init();

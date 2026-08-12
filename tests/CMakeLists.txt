@@ -9,6 +9,7 @@ target_include_directories(i2c_test PRIVATE
 target_link_libraries(i2c_test PRIVATE
     hal
     utils
+    drivers
     pico_stdlib
     FreeRTOS-Kernel-Heap4
 )

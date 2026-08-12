@@ -1,9 +1,13 @@
 #include "hal/i2c_hal.h"
 #include "pico/error.h" 
 
-I2CHal::I2CHal(const Config &config)
-    : m_config(config), m_mutex(nullptr), m_initialized(false) 
+I2CHal::I2CHal(i2c_inst_t *i2c, uint baudrate, uint sda_pin, uint scl_pin)
+    : m_mutex(nullptr), m_initialized(false) 
 {
+    m_config.baudrate = baudrate;
+    m_config.i2c = i2c;
+    m_config.scl_pin = scl_pin;
+    m_config.sda_pin = sda_pin;
 }
 
 I2CHal::~I2CHal() 
