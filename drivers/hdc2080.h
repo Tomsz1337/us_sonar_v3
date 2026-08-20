@@ -16,8 +16,8 @@ public:
 
 private:
 
-    static constexpr uint8_t REG_MANUFACTURER_ID    0xFC;
-    static constexpr uint8_t REG_DEVICE_ID          0xFE;
+    static constexpr uint8_t REG_MANUFACTURER_ID =  0xFC;
+    static constexpr uint8_t REG_DEVICE_ID       =  0xFE;
 
     I2CHal &m_i2c;
     uint8_t m_devAddr;
