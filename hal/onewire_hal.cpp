@@ -131,7 +131,7 @@ uint8_t OneWireHal::read_byte()
     return static_cast<uint8_t>(pio_sm_get_blocking(m_config.pio, m_sm) >> 24);
 }
 
-uint8_t OneWireHal::crc8(const uint8_t *data, size_t len)
+uint32_t OneWireHal::crc8(const uint32_t *data, size_t len)
 {
     uint8_t crc = 0;
     for(size_t i = 0; i < len; i++)

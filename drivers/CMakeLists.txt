@@ -2,6 +2,7 @@ add_library(drivers STATIC
     bmp085.cpp
     hdc2080.cpp
     neo6m.cpp
+    ds18b20.cpp
 )
 
 target_include_directories(drivers PUBLIC

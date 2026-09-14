@@ -27,7 +27,7 @@ public:
     bool reset();
     void write_byte(uint8_t byte);
     uint8_t read_byte();
-    static uint8_t crc8(const uint8_t *data, size_t len);
+    static uint32_t crc8(const uint32_t *data, size_t len);
 
 private:
     Config m_config;
