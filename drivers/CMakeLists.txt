@@ -3,6 +3,7 @@ add_library(drivers STATIC
     hdc2080.cpp
     neo6m.cpp
     ds18b20.cpp
+    tuss4470.cpp
 )
 
 target_include_directories(drivers PUBLIC
