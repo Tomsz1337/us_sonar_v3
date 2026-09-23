@@ -22,6 +22,7 @@ include_directories(
 add_subdirectory(utils)
 add_subdirectory(hal)
 add_subdirectory(drivers)
+add_subdirectory(comm)
 add_subdirectory(tests)
 
 add_executable(${PROJECT_NAME}
@@ -47,6 +48,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     FreeRTOS-Kernel-Heap4
     hal
     drivers
+    comm
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})
