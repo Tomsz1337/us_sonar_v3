@@ -11,8 +11,8 @@
 class UdpTransport : public ITransport 
 {
 public:
-    UdpTransport(ip_addr_t remote_ip, uint16_t port, uint8_t ssid,
-                 uint8_t password, uint16_t local_port);
+    UdpTransport(ip_addr_t remote_ip, uint16_t port, const char *ssid,
+                 const char *password, uint16_t local_port);
     ~UdpTransport() override;
 
     bool init() override;
@@ -25,8 +25,8 @@ private:
     uint16_t m_remote_port;
     uint16_t m_local_port;
     udp_pcb *m_pcb{nullptr};
-    const char m_ssid;
-    const char m_password;
+    const char *m_ssid;
+    const char *m_password;
 
 
     static void udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,

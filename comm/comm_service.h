@@ -7,6 +7,8 @@
 
 #include "transport.h"
 #include "protocol.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
 class CommService 
 {
@@ -20,13 +22,14 @@ public:
     bool send_telemetry(std::span<const uint16_t> data);
     bool send_gps(std::span<const uint16_t> data);
     bool send_sonar(std::span<const uint16_t> data);
-    [[nodiscard]] protocol::CmdId get_cmd() const;
-    void clear_cmd();
+    void set_connected();
+    bool receive_cmd(protocol::CmdId &cmd);
 
 private:
     ITransport &m_transport;
-    protocol::CmdId m_current_cmd{protocol::CmdId::NONE};
+    QueueHandle_t m_cmd_queue = nullptr;
     uint16_t m_tx_seq{0};
+    bool m_is_connected{false};
 
     std::array<uint8_t, protocol::HEADER_SIZE + protocol::MAX_PAYLOAD_SIZE * 4> m_tx_buffer{};
 

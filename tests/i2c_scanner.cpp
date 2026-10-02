@@ -4,6 +4,13 @@
 #include "task.h"
 #include "hal/i2c_hal.h"
 #include "drivers/bmp085.h"
+#include "SEGGER_SYSVIEW.h"
+
+static inline void init_dwt(void) {
+    *(volatile uint32_t*)0xE000EDFC |= (1 << 24); // DEMCR: Włącz dostęp do bloków śledzenia (TRCENA)
+    *(volatile uint32_t*)0xE0001004 = 0;          // DWT_CYCCNT: Wyzeruj licznik cykli
+    *(volatile uint32_t*)0xE0001000 |= (1 << 0);  // DWT_CTRL: Włącz licznik cykli (CYCCNTENA)
+}
 
 void bmp085_task(void *pvParameters)
 {
@@ -38,7 +45,9 @@ void bmp085_task(void *pvParameters)
 int main()
 {
     stdio_init_all();
-
+    init_dwt();             
+    SEGGER_SYSVIEW_Conf();   
+    SEGGER_SYSVIEW_Start();
     xTaskCreate(
         bmp085_task,
         "BMP085_Task",

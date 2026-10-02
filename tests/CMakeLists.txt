@@ -12,9 +12,6 @@ target_link_libraries(i2c_test PRIVATE
     drivers
     pico_stdlib
     FreeRTOS-Kernel-Heap4
+    systemview
 )
 
-pico_enable_stdio_usb(i2c_test 1)
-pico_enable_stdio_uart(i2c_test 0)
-
-pico_add_extra_outputs(i2c_test)

@@ -1,6 +1,7 @@
 #include "udp_transport.h"
 
-UdpTransport::UdpTransport(ip_addr_t remote_ip, uint16_t port, uint8_t ssid, uint8_t password, uint16_t local_port)
+UdpTransport::UdpTransport(ip_addr_t remote_ip, uint16_t port, const char *ssid,
+                 const char *password, uint16_t local_port)
     : m_remote_ip(remote_ip), m_remote_port(port), m_ssid(ssid), m_password(password), m_local_port(local_port)
 {}
 
@@ -30,8 +31,13 @@ bool UdpTransport::init()
     m_rx_queue = xQueueCreate(8, sizeof(RxPacket));
     if(!m_rx_queue) return false;
 
-    cyw43_arch_init();
-    cyw43_arch_enable_ap_mode(&m_ssid, &m_password, CYW43_AUTH_WPA2_AES_PSK);
+    int res = cyw43_arch_init();
+    if(res != 0) 
+    {
+        return false;
+    }
+
+    cyw43_arch_enable_ap_mode(m_ssid, m_password, CYW43_AUTH_WPA2_AES_PSK);
 
     m_pcb = udp_new();
     if(!m_pcb) return false;
@@ -42,9 +48,7 @@ bool UdpTransport::init()
         m_pcb = nullptr;
         return false;
     }
-
     udp_recv(m_pcb, udp_recv_cb, this);
-
     return true;
 }
 
@@ -59,7 +63,8 @@ void UdpTransport::udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 void UdpTransport::handle_incoming_pbuf(struct pbuf *p, const ip_addr_t *addr, u16_t port) 
 {
     RxPacket pkt{ .pbuf_ptr = p };
-    if (xQueueSend(m_rx_queue, &pkt, 0) != pdTRUE) {
+    if(xQueueSend(m_rx_queue, &pkt, 0) != pdTRUE) 
+    {
         pbuf_free(p);
     }
 }

@@ -8,7 +8,18 @@ CommService::CommService(ITransport &transport)
 
 bool CommService::init() 
 {
-    return m_transport.init();
+    if(!m_transport.init())
+    {
+        return false;
+    }
+
+    m_cmd_queue = xQueueCreate(10, sizeof(protocol::CmdId));
+
+    if(m_cmd_queue == nullptr)
+    {
+        return false;
+    }
+    return true;
 }
 
 void CommService::process_rx() 
@@ -39,7 +50,7 @@ void CommService::handle_rx(std::span<const uint8_t> rx_data)
 
     if(header.type == protocol::PktType::CMD) 
     {
-        m_current_cmd = header.id;
+        xQueueSend(m_cmd_queue, &header.id, 0);
     }
 }
 
@@ -85,12 +96,12 @@ bool CommService::send_sonar(std::span<const uint16_t> data)
     return send_packet(protocol::PktType::SONAR, protocol::CmdId::NONE, bytes_span);
 }
 
-protocol::CmdId CommService::get_cmd() const 
+void CommService::set_connected()
 {
-    return m_current_cmd;
+    m_is_connected = true;
 }
 
-void CommService::clear_cmd() 
+bool CommService::receive_cmd(protocol::CmdId &cmd)
 {
-    m_current_cmd = protocol::CmdId::NONE;
+    return xQueueReceive(m_cmd_queue, &cmd, 0) == pdPASS;
 }
