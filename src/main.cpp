@@ -4,8 +4,9 @@
 #include "task.h"
 #include "comm/comm_service.h"
 #include "comm/udp_transport.h"
+#include "SEGGER_RTT.h"
 
-UdpTransport g_udp(ip_addr_any, 5005, "PICO_NET", "test123", 5005);
+UdpTransport g_udp(IPADDR4_INIT_BYTES(192,168,4,2), 5005, "PICO_NET", "test1234", 5005);
 CommService g_comm(g_udp);
 
 
@@ -22,7 +23,7 @@ void vCommTask(void *pvParameters)
     while(true) 
     {
         g_comm.process_rx();
-
+        printf(g_udp.m_password);
         protocol::CmdId cmd;
 
         if(g_comm.receive_cmd(cmd))
@@ -59,7 +60,10 @@ void vCommTask(void *pvParameters)
                 case protocol::CmdId::STOP:
                     // ...
                     break;
-
+                case protocol::CmdId::SENSOR:
+                    break;
+                case protocol::CmdId::US:
+                    break;
                 default:
                     break;
             }
@@ -73,6 +77,9 @@ void vCommTask(void *pvParameters)
 int main() 
 {
     stdio_init_all();
+    SEGGER_RTT_Init();
+
+    SEGGER_RTT_printf(0, g_udp.m_password);
 
     xTaskCreate(
         vCommTask,

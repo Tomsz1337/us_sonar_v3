@@ -1,6 +1,6 @@
-add_library(systemview INTERFACE)
+add_library(segger INTERFACE)
 
-target_sources(systemview INTERFACE
+target_sources(segger INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/Config/SEGGER_SYSVIEW_Config_FreeRTOS.c
     ${CMAKE_CURRENT_LIST_DIR}/SEGGER/SEGGER_RTT.c
     ${CMAKE_CURRENT_LIST_DIR}/SEGGER/SEGGER_RTT_printf.c
@@ -9,7 +9,7 @@ target_sources(systemview INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/SEGGER/SEGGER_RTT_ASM_ARMv7M.S
 )
 
-target_include_directories(systemview INTERFACE
+target_include_directories(segger INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/SEGGER
     ${CMAKE_CURRENT_LIST_DIR}/Config
     ${CMAKE_CURRENT_LIST_DIR}/Sample/FreeRTOSV11

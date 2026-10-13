@@ -47,7 +47,8 @@ void CommService::handle_rx(std::span<const uint8_t> rx_data)
     {
         return; 
     }
-
+    const auto cmd = static_cast<protocol::CmdId>(header.id);
+    send_ack(cmd);
     if(header.type == protocol::PktType::CMD) 
     {
         xQueueSend(m_cmd_queue, &header.id, 0);

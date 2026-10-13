@@ -27,13 +27,13 @@ add_subdirectory(utils)
 # add_subdirectory(hal)
 # add_subdirectory(drivers)
 add_subdirectory(comm)
-# add_subdirectory(segger_rtt)
+add_subdirectory(segger_rtt)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
 )
 
-pico_enable_stdio_usb(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
 pico_enable_stdio_rtt(${PROJECT_NAME} 0)
 
@@ -51,7 +51,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #hal
     #drivers
     comm
-    #systemview
+    segger
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})
