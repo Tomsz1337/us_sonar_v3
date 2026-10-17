@@ -3,6 +3,7 @@
 #include "transport.h"
 #include "lwip/udp.h"
 #include "lwip/ip_addr.h"
+#include "lwip/netif.h"
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
 #include "FreeRTOS.h"
@@ -20,13 +21,15 @@ public:
     bool receive(std::span<uint8_t> buffer, size_t &received_bytes) override;
     bool is_connected() const override;
 
+    const char *m_password;
+
 private:
     ip_addr_t m_remote_ip;
     uint16_t m_remote_port;
     uint16_t m_local_port;
     udp_pcb *m_pcb{nullptr};
     const char *m_ssid;
-    const char *m_password;
+    
 
 
     static void udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,

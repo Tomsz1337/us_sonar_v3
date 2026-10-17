@@ -26,31 +26,60 @@ UdpTransport::~UdpTransport()
     }
 }
 
-bool UdpTransport::init() 
+
+bool UdpTransport::init()
 {
     m_rx_queue = xQueueCreate(8, sizeof(RxPacket));
-    if(!m_rx_queue) return false;
+    if (!m_rx_queue)
+        return false;
 
     int res = cyw43_arch_init();
-    if(res != 0) 
+    if (res != 0)
+        return false;
+
+    cyw43_arch_enable_ap_mode(
+        m_ssid,
+        m_password,
+        CYW43_AUTH_WPA2_AES_PSK
+    );
+
+    cyw43_arch_lwip_begin();
+
+    struct netif *ap_netif = &cyw43_state.netif[CYW43_ITF_AP];
+
+    ip4_addr_t ip, netmask, gw;
+    IP4_ADDR(&ip, 192, 168, 4, 1);
+    IP4_ADDR(&netmask, 255, 255, 255, 0);
+    IP4_ADDR(&gw, 192, 168, 4, 1);
+
+    netif_set_addr(ap_netif, &ip, &netmask, &gw);
+    netif_set_up(ap_netif);
+    netif_set_link_up(ap_netif);
+
+    m_pcb = udp_new();
+    if (!m_pcb)
     {
+        cyw43_arch_lwip_end();
         return false;
     }
 
-    cyw43_arch_enable_ap_mode(m_ssid, m_password, CYW43_AUTH_WPA2_AES_PSK);
+    err_t err = udp_bind(m_pcb, IP_ANY_TYPE, m_local_port);
 
-    m_pcb = udp_new();
-    if(!m_pcb) return false;
-
-    if(udp_bind(m_pcb, IP_ANY_TYPE, m_local_port) != ERR_OK) 
+    if (err != ERR_OK)
     {
         udp_remove(m_pcb);
         m_pcb = nullptr;
+        cyw43_arch_lwip_end();
         return false;
     }
+
     udp_recv(m_pcb, udp_recv_cb, this);
+
+    cyw43_arch_lwip_end();
+
     return true;
 }
+
 
 void UdpTransport::udp_recv_cb(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                                      const ip_addr_t *addr, u16_t port) 
