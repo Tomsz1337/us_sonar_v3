@@ -23,7 +23,7 @@ public:
     bool send_gps(std::span<const uint16_t> data);
     bool send_sonar(std::span<const uint16_t> data);
     void set_connected();
-    bool receive_cmd(protocol::CmdId &cmd);
+    bool receive_cmd(protocol::CmdId &cmd, TickType_t wait_ticks = 0);
 
 private:
     ITransport &m_transport;

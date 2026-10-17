@@ -43,15 +43,19 @@ void CommService::handle_rx(std::span<const uint8_t> rx_data)
     protocol::Header header{};
     std::memcpy(&header, rx_data.data(), protocol::HEADER_SIZE);
 
-    if(protocol::HEADER_SIZE + header.len > rx_data.size()) 
-    {
-        return; 
-    }
+    if(protocol::HEADER_SIZE + header.len != rx_data.size())
+        return;
 
-    if(header.type == protocol::PktType::CMD) 
+    if(header.type != protocol::PktType::CMD)
+        return;
+
+    const auto cmd = static_cast<protocol::CmdId>(header.id);
+
+    if(xQueueSend(m_cmd_queue, &cmd, 0) != pdPASS)
     {
-        xQueueSend(m_cmd_queue, &header.id, 0);
+        return;
     }
+    send_ack(cmd);
 }
 
 bool CommService::send_packet(protocol::PktType type, protocol::CmdId id, std::span<const uint8_t> payload) 
@@ -101,7 +105,7 @@ void CommService::set_connected()
     m_is_connected = true;
 }
 
-bool CommService::receive_cmd(protocol::CmdId &cmd)
+bool CommService::receive_cmd(protocol::CmdId &cmd, TickType_t wait_ticks)
 {
-    return xQueueReceive(m_cmd_queue, &cmd, 0) == pdPASS;
+    return xQueueReceive(m_cmd_queue, &cmd, wait_ticks) == pdPASS;
 }

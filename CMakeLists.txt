@@ -17,7 +17,7 @@ add_compile_definitions(
     PICO_FREERTOS=1
     PICO_CYW43_ARCH_FREERTOS=1
     NO_SYS=0
-    FREE_RTOS_KERNEL_SMP=0
+    #FREE_RTOS_KERNEL_SMP=0
 
 )
 
@@ -29,19 +29,24 @@ add_subdirectory(utils)
 add_subdirectory(comm)
 # add_subdirectory(segger_rtt)
 
-add_executable(${PROJECT_NAME}
+add_executable(firmware
     src/main.cpp
+    system/system_init.cpp
+    tasks/comm_task.cpp
+    tasks/control_task.cpp
 )
 
-pico_enable_stdio_usb(${PROJECT_NAME} 0)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
-pico_enable_stdio_rtt(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(firmware 0)
+pico_enable_stdio_uart(firmware 0)
+pico_enable_stdio_rtt(firmware 0)
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(firmware PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/config
 )
-
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_compile_options(firmware PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
+)
+target_link_libraries(firmware PRIVATE
     pico_stdlib
     #pico_multicore
     pico_cyw43_arch_lwip_sys_freertos
@@ -54,4 +59,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     #systemview
 )
 
-pico_add_extra_outputs(${PROJECT_NAME})
+pico_add_extra_outputs(firmware)
