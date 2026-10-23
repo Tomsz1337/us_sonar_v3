@@ -1,9 +1,12 @@
 #include "udp_transport.h"
+#include "lwip/ip4_addr.h"
 
-UdpTransport::UdpTransport(ip_addr_t remote_ip, uint16_t port, const char *ssid,
+UdpTransport::UdpTransport(const char *remote_ip, uint16_t port, const char *ssid,
                  const char *password, uint16_t local_port)
-    : m_remote_ip(remote_ip), m_remote_port(port), m_ssid(ssid), m_password(password), m_local_port(local_port)
-{}
+    : m_remote_port(port), m_ssid(ssid), m_password(password), m_local_port(local_port)
+{
+    ip4addr_aton(remote_ip, ip_2_ip4(&m_remote_ip));
+}
 
 UdpTransport::~UdpTransport()
 {

@@ -31,7 +31,7 @@ private:
     uint16_t m_tx_seq{0};
     bool m_is_connected{false};
 
-    std::array<uint8_t, protocol::HEADER_SIZE + protocol::MAX_PAYLOAD_SIZE * 4> m_tx_buffer{};
+    std::array<uint8_t, protocol::HEADER_SIZE + protocol::MAX_PAYLOAD_SIZE> m_tx_buffer{};
 
     bool send_packet(protocol::PktType type, protocol::CmdId id, std::span<const uint8_t> payload);
 };

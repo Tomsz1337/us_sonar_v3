@@ -8,11 +8,17 @@
 #include "comm/udp_transport.h"
 
 #include "tasks/control_task.h"
+#include "tasks/data_queue.h"
 
-UdpTransport g_udp(ip_addr_any, 5005, "PICO_NET", "test123", 5005);
+UdpTransport g_udp(
+    "192.168.4.2",
+    5005,
+    "PICO_NET",
+    "test1234",
+    5005
+);
+
 CommService g_comm(g_udp);
-
-
 
 void vCommTask(void *pvParameters)
 {
@@ -42,13 +48,39 @@ void vCommTask(void *pvParameters)
 
             if (!control_task_post_command(cmd))
             {
-                // Kolejka sterująca jest pełna
-                // albo nie została zainicjalizowana.
-                // Obsługę błędu dodamy później.
+                // TODO: obsługa przepełnienia kolejki.
             }
         }
 
-        TickType_t now = xTaskGetTickCount();
+        DataPacket packet;
+
+        while (data_queue_receive(packet, 0))
+        {
+            const auto samples = std::span<const uint16_t>(
+                packet.samples.data(),
+                packet.count
+            );
+
+            switch (packet.type)
+            {
+                case protocol::PktType::SENSOR:
+                    g_comm.send_telemetry(samples);
+                    break;
+
+                case protocol::PktType::SONAR:
+                    g_comm.send_sonar(samples);
+                    break;
+
+                case protocol::PktType::GPS:
+                    g_comm.send_gps(samples);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        const TickType_t now = xTaskGetTickCount();
 
         if (now - lastHeartbeat >= pdMS_TO_TICKS(500))
         {

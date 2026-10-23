@@ -6,12 +6,15 @@
 
 namespace
 {
+    constexpr UBaseType_t CONTROL_QUEUE_LENGTH = 10;
+    constexpr configSTACK_DEPTH_TYPE CONTROL_TASK_STACK_SIZE = 2048;
+
     QueueHandle_t g_control_queue = nullptr;
 
     enum class DeviceState
     {
         WAIT,
-        RUN
+        IDLE
     };
 
     void vControlTask(void *pvParameters)
@@ -23,12 +26,15 @@ namespace
 
         while (true)
         {
-            if (xQueueReceive(g_control_queue, &cmd, portMAX_DELAY) == pdPASS)
+            if (xQueueReceive(
+                    g_control_queue,
+                    &cmd,
+                    portMAX_DELAY) == pdPASS)
             {
                 switch (cmd)
                 {
                     case protocol::CmdId::RDY:
-                        state = DeviceState::RUN;
+                        state = DeviceState::IDLE;
                         break;
 
                     case protocol::CmdId::STOP:
@@ -36,16 +42,16 @@ namespace
                         break;
 
                     case protocol::CmdId::SENSOR:
-                        if (state == DeviceState::RUN)
+                        if (state == DeviceState::IDLE)
                         {
-                            
+                            // TODO: zlecenie odczytu czujników
                         }
                         break;
 
                     case protocol::CmdId::US:
-                        if (state == DeviceState::RUN)
+                        if (state == DeviceState::IDLE)
                         {
-                            
+                            // TODO: uruchomienie sonaru
                         }
                         break;
 
@@ -60,9 +66,8 @@ namespace
 bool control_task_init()
 {
     g_control_queue = xQueueCreate(
-        10,
-        sizeof(protocol::CmdId)
-    );
+        CONTROL_QUEUE_LENGTH,
+        sizeof(protocol::CmdId));
 
     if (g_control_queue == nullptr)
     {
@@ -72,11 +77,10 @@ bool control_task_init()
     BaseType_t result = xTaskCreate(
         vControlTask,
         "ControlTask",
-        2048,
+        CONTROL_TASK_STACK_SIZE,
         nullptr,
         tskIDLE_PRIORITY + 1,
-        nullptr
-    );
+        nullptr);
 
     if (result != pdPASS)
     {
@@ -94,5 +98,9 @@ bool control_task_post_command(protocol::CmdId cmd)
     {
         return false;
     }
-    return xQueueSend(g_control_queue, &cmd, 0) == pdPASS;
+
+    return xQueueSend(
+        g_control_queue,
+        &cmd,
+        0) == pdPASS;
 }
