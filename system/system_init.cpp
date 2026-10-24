@@ -9,24 +9,9 @@
 
 bool system_init()
 {
-    if (!data_queue_init())
-    {
-        return false;
-    }
+    if (!data_queue_init()){return false;}
+    if (!control_task_init()){return false;}
+    if (!comm_task_init()){return false;}
 
-    if (!control_task_init())
-    {
-        return false;
-    }
-
-    BaseType_t result = xTaskCreate(
-        vCommTask,
-        "CommTask",
-        4096,
-        nullptr,
-        tskIDLE_PRIORITY + 2,
-        nullptr
-    );
-
-    return result == pdPASS;
+    return true;
 }

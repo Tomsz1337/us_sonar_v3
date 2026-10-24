@@ -93,3 +93,16 @@ void vCommTask(void *pvParameters)
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
+
+bool comm_task_init()
+{
+    BaseType_t result = xTaskCreate(
+        vCommTask,
+        "CommTask",
+        4096,
+        nullptr,
+        tskIDLE_PRIORITY + 2,
+        nullptr
+    );
+    return (result == pdPASS);
+}
