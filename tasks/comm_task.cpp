@@ -3,13 +3,22 @@
 #include "pico/cyw43_arch.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "lwip/ip_addr.h"
 
 #include "comm/comm_service.h"
 #include "comm/udp_transport.h"
 
 #include "tasks/control_task.h"
 
-UdpTransport g_udp(ip_addr_any, 5005, "PICO_NET", "test123", 5005);
+ip_addr_t pc_ip;
+static ip_addr_t make_pc_ip()
+{
+    ip_addr_t ip;
+    IP4_ADDR(ip_2_ip4(&ip), 192, 168, 4, 2);
+    return ip;
+}
+
+UdpTransport g_udp(make_pc_ip(), 5005, "PICO_NET", "test1234", 5005);
 CommService g_comm(g_udp);
 
 
