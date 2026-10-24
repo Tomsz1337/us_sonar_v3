@@ -9,19 +9,17 @@
 #include "comm/udp_transport.h"
 
 #include "tasks/control_task.h"
+#include "tasks/data_queue.h"
 
-ip_addr_t pc_ip;
-static ip_addr_t make_pc_ip()
-{
-    ip_addr_t ip;
-    IP4_ADDR(ip_2_ip4(&ip), 192, 168, 4, 2);
-    return ip;
-}
+UdpTransport g_udp(
+    "192.168.4.2",
+    5005,
+    "PICO_NET",
+    "test1234",
+    5005
+);
 
-UdpTransport g_udp(make_pc_ip(), 5005, "PICO_NET", "test1234", 5005);
 CommService g_comm(g_udp);
-
-
 
 void vCommTask(void *pvParameters)
 {
@@ -51,13 +49,39 @@ void vCommTask(void *pvParameters)
 
             if (!control_task_post_command(cmd))
             {
-                // Kolejka sterująca jest pełna
-                // albo nie została zainicjalizowana.
-                // Obsługę błędu dodamy później.
+                // TODO: obsługa przepełnienia kolejki.
             }
         }
 
-        TickType_t now = xTaskGetTickCount();
+        DataPacket packet;
+
+        while (data_queue_receive(packet, 0))
+        {
+            const auto samples = std::span<const uint16_t>(
+                packet.samples.data(),
+                packet.count
+            );
+
+            switch (packet.type)
+            {
+                case protocol::PktType::SENSOR:
+                    g_comm.send_telemetry(samples);
+                    break;
+
+                case protocol::PktType::SONAR:
+                    g_comm.send_sonar(samples);
+                    break;
+
+                case protocol::PktType::GPS:
+                    g_comm.send_gps(samples);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        const TickType_t now = xTaskGetTickCount();
 
         if (now - lastHeartbeat >= pdMS_TO_TICKS(500))
         {
@@ -69,4 +93,17 @@ void vCommTask(void *pvParameters)
 
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+}
+
+bool comm_task_init()
+{
+    BaseType_t result = xTaskCreate(
+        vCommTask,
+        "CommTask",
+        4096,
+        nullptr,
+        tskIDLE_PRIORITY + 2,
+        nullptr
+    );
+    return (result == pdPASS);
 }

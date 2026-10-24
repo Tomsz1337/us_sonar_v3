@@ -12,7 +12,7 @@
 class UdpTransport : public ITransport 
 {
 public:
-    UdpTransport(ip_addr_t remote_ip, uint16_t port, const char *ssid,
+    UdpTransport(const char *remote_ip, uint16_t port, const char *ssid,
                  const char *password, uint16_t local_port);
     ~UdpTransport() override;
 

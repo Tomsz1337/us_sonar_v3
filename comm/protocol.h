@@ -6,7 +6,8 @@
 
 namespace protocol {
 
-constexpr size_t MAX_PAYLOAD_SIZE = 512;
+constexpr size_t SONAR_SAMPLES = 1000;
+constexpr size_t MAX_PAYLOAD_SIZE = SONAR_SAMPLES * sizeof(uint16_t);
 
 // =========================
 // PACKET TYPES

@@ -1,3 +1,3 @@
 #pragma once
 
-void vCommTask(void *pvParameters);
+bool comm_task_init();
