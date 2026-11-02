@@ -24,8 +24,8 @@ add_compile_definitions(
 pico_sdk_init()
 
 add_subdirectory(utils)
-# add_subdirectory(hal)
-# add_subdirectory(drivers)
+add_subdirectory(hal)
+add_subdirectory(drivers)
 add_subdirectory(comm)
 # add_subdirectory(segger_rtt)
 
@@ -34,6 +34,8 @@ add_executable(firmware
     system/system_init.cpp
     tasks/comm_task.cpp
     tasks/control_task.cpp
+    tasks/telemetry_task.cpp
+    tasks/data_queue.cpp
 )
 
 pico_enable_stdio_usb(firmware 0)
@@ -53,8 +55,8 @@ target_link_libraries(firmware PRIVATE
     FreeRTOS-Kernel
     FreeRTOS-Kernel-Heap4
     utils
-    #hal
-    #drivers
+    hal
+    drivers
     comm
     #systemview
 )

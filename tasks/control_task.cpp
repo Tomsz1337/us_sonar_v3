@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "tasks/telemetry_task.h"
 
 namespace
 {
@@ -26,10 +27,7 @@ namespace
 
         while (true)
         {
-            if (xQueueReceive(
-                    g_control_queue,
-                    &cmd,
-                    portMAX_DELAY) == pdPASS)
+            if (xQueueReceive(g_control_queue, &cmd, portMAX_DELAY) == pdPASS)
             {
                 switch (cmd)
                 {
@@ -38,13 +36,13 @@ namespace
                         break;
 
                     case protocol::CmdId::STOP:
-                        state = DeviceState::WAIT;
+                        state = DeviceState::IDLE;
                         break;
 
                     case protocol::CmdId::SENSOR:
                         if (state == DeviceState::IDLE)
                         {
-                            // TODO: zlecenie odczytu czujników
+                            telemetry_task_request();
                         }
                         break;
 

@@ -3,6 +3,14 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "tasks/data_queue.h"
+#include "drivers/bmp085.h"
+#include "hal/i2c_hal.h"
+#include "data_queue.h"
+
+namespace
+{
+    TaskHandle_t telemetry_handle = nullptr;
+}
 
 bool telemetry_task_init()
 {
@@ -12,7 +20,7 @@ bool telemetry_task_init()
         2048,
         nullptr,
         tskIDLE_PRIORITY + 1,
-        nullptr
+        &telemetry_handle
     );
     return (result == pdPASS);
 }
@@ -20,9 +28,25 @@ bool telemetry_task_init()
 void vTelemetryTask(void *pvParameters)
 {
     (void)pvParameters;
-
+    std::array<uint16_t, MAX_DATA_SAMPLES> samples{2350,5600,10130,2450,1800};
     while (true)
     {
-        // tutaj później będziemy czekać na żądanie telemetrii
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        DataPacket sensorData{
+            protocol::PktType::SENSOR,
+            5,
+            samples
+        };
+        if (!data_queue_send(sensorData, 0))
+        {
+            // TODO: obsługa błędu
+        }
     }
+}
+
+bool telemetry_task_request()
+{
+    if(telemetry_handle == nullptr){return false;}
+    xTaskNotifyGive(telemetry_handle);
+    return true;
 }
