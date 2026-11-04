@@ -4,6 +4,7 @@
 #include "task.h"
 #include "queue.h"
 #include "tasks/telemetry_task.h"
+#include "tasks/sonar_task.h"
 
 namespace
 {
@@ -36,7 +37,7 @@ namespace
                         break;
 
                     case protocol::CmdId::STOP:
-                        state = DeviceState::IDLE;
+                        sonar_task_stop();
                         break;
 
                     case protocol::CmdId::SENSOR:
@@ -49,7 +50,7 @@ namespace
                     case protocol::CmdId::US:
                         if (state == DeviceState::IDLE)
                         {
-                            // TODO: uruchomienie sonaru
+                            sonar_task_start();
                         }
                         break;
 

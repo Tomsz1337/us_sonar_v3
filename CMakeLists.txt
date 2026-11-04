@@ -36,6 +36,7 @@ add_executable(firmware
     tasks/control_task.cpp
     tasks/telemetry_task.cpp
     tasks/data_queue.cpp
+    tasks/sonar_task.cpp
 )
 
 pico_enable_stdio_usb(firmware 0)
