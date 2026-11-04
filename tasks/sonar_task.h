@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 bool sonar_task_init();
 bool sonar_task_start();
 bool sonar_task_stop();

@@ -13,7 +13,7 @@ namespace
         (void)pvParameters;
         bool sonar_running = false;
         uint32_t notification;
-
+        std::array<uint16_t, MAX_DATA_SAMPLES> samples{};
         while (true)
         {
             if (!sonar_running)
@@ -26,9 +26,34 @@ namespace
             }
             else
             {
-                // Generuj ramkę
-                // Sprawdź, czy nie nadeszło STOP
-                // Zachowaj okres 100 ms
+                if (xTaskNotifyWait(
+                        0,
+                        0,
+                        &notification,
+                        pdMS_TO_TICKS(100)) == pdTRUE)
+                {
+                    if (static_cast<SonarCommand>(notification) == SonarCommand::STOP)
+                    {
+                        sonar_running = false;
+                    }
+                }
+                else
+                {
+                    for (size_t i = 0; i < samples.size(); ++i)
+                    {
+                        samples[i] = static_cast<uint16_t>(i);
+                    }
+                    DataPacket sonarData{
+                        protocol::PktType::SONAR,
+                        static_cast<uint16_t>(samples.size()),
+                        samples
+                    };
+
+                    if (!data_queue_send(sonarData, 0))
+                    {
+                        // TODO: obsługa błędu
+                    }
+                }
             }
         }
     }

@@ -7,6 +7,7 @@
 #include "tasks/control_task.h"
 #include "tasks/data_queue.h"
 #include "tasks/telemetry_task.h"
+#include "tasks/sonar_task.h"
 
 bool system_init()
 {
@@ -14,6 +15,7 @@ bool system_init()
     if (!control_task_init()){return false;}
     if (!comm_task_init()){return false;}
     if (!telemetry_task_init()){return false;}
+    if (!sonar_task_init()){return false;}
 
     return true;
 }
