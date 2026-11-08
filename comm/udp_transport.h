@@ -19,7 +19,8 @@ public:
     bool init() override;
     bool send(std::span<const uint8_t> data) override;
     bool receive(std::span<uint8_t> buffer, size_t &received_bytes) override;
-    bool is_connected() const override;
+    size_t max_frame_size() const override;
+    bool is_ready() const override;
 
     const char *m_password;
 

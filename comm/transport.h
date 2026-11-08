@@ -11,5 +11,6 @@ public:
     virtual bool init() = 0;
     virtual bool send(std::span<const uint8_t> data) = 0;
     virtual bool receive(std::span<uint8_t> buffer, size_t &received_bytes) = 0;
-    virtual bool is_connected() const = 0;
+    virtual size_t max_frame_size() const = 0;
+    virtual bool is_ready() const = 0;
 };

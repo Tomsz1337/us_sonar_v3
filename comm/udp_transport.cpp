@@ -123,17 +123,40 @@ bool UdpTransport::receive(std::span<uint8_t> buffer, size_t &received_bytes)
     {
         if(!pkt.pbuf_ptr) return false;
 
-        size_t bytes_to_copy = std::min(static_cast<size_t>(pkt.pbuf_ptr->tot_len), buffer.size());
-        pbuf_copy_partial(pkt.pbuf_ptr, buffer.data(), bytes_to_copy, 0);
-        
-        received_bytes = bytes_to_copy;
+        const size_t packet_size = pkt.pbuf_ptr->tot_len;
+
+        if(packet_size > buffer.size())
+        {
+            pbuf_free(pkt.pbuf_ptr);
+            return false;
+        }
+
+        const u16_t copied = pbuf_copy_partial(
+            pkt.pbuf_ptr,
+            buffer.data(),
+            packet_size,
+            0
+        );
+
         pbuf_free(pkt.pbuf_ptr);
+
+        if(copied != packet_size)
+        {
+            return false;
+        }
+
+        received_bytes = copied;
         return true;
     }
     return false;
 }
 
-bool UdpTransport::is_connected() const 
+bool UdpTransport::is_ready() const
 {
-    return m_pcb != nullptr;
+    return m_pcb != nullptr && m_rx_queue != nullptr;
+}
+
+size_t UdpTransport::max_frame_size() const
+{
+    return 1200;
 }
