@@ -1,7 +1,7 @@
 add_library(comm STATIC
     udp_transport.cpp
     comm_service.cpp
-
+    protocol.cpp
 )
 
 target_include_directories(comm PUBLIC

@@ -79,9 +79,27 @@ struct Header {
 
 constexpr size_t HEADER_SIZE = 9;
 
-static_assert(sizeof(uint8_t) == 1);
-static_assert(sizeof(uint16_t) == 2);
 static_assert(HEADER_SIZE == 9);
+
+bool validate_header(const Header& header);
+bool serialize_header(const Header& header,
+                      std::span<std::uint8_t> buffer);
+bool deserialize_header(std::span<const std::uint8_t> buffer,
+                        Header &header);
+bool build_packet(const Header &header,
+                    std::span<const std::uint8_t> payload,
+                    std::span<std::uint8_t> output,
+                    std::size_t &written_bytes);
+bool parse_packet(std::span<const std::uint8_t> frame,
+                    Header& header,
+                    std::span<const std::uint8_t>& payload);
+bool build_fragment(const Header& header,
+                    std::span<const std::uint8_t> payload,
+                    std::size_t max_frame_size,
+                    std::uint8_t fragment_index,
+                    std::span<std::uint8_t> output,
+                    std::size_t& written_bytes
+);
 // =========================
 // FULL PACKET
 // =========================
