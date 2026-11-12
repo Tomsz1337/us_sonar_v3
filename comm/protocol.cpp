@@ -1,5 +1,6 @@
 #include "protocol.h"
 #include <cstring>
+#include <algorithm>
 
 namespace protocol
 {
@@ -139,9 +140,22 @@ bool build_fragment(const Header& header, std::span<const std::uint8_t> payload,
                     std::span<std::uint8_t> output, std::size_t& written_bytes)
 {
     written_bytes = 0;
-    if(!validate_header(header)) {return false;}
-    size_t max_payload_size = max_frame_size - HEADER_SIZE;
-    uint8_t fragment_count = 
-
+    if (!validate_header(header)) {return false;}
+    if (max_frame_size <= HEADER_SIZE || payload.size() != header.total_length ||
+        payload.size() > MAX_MESSAGE_SIZE)
+    {
+        return false;
+    }
+    const size_t max_payload_size = max_frame_size - HEADER_SIZE;
+    const std::size_t fragment_count = payload.empty() ? 1
+                                        : (payload.size() + max_payload_size - 1) / max_payload_size;
+    if(fragment_count > MAX_FRAGMENT_COUNT) {return false;}
+    if (fragment_index >= fragment_count) {return false;}
+    const size_t offset = fragment_index * max_payload_size;
+    const std::size_t remaining = payload.size() - offset;
+    const std::size_t fragment_size = std::min(remaining, max_payload_size);
+    return true;
 }
+
+
 }//protocol
