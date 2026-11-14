@@ -110,16 +110,17 @@ bool deserialize_header(std::span<const std::uint8_t> buffer,
 }
 
 bool build_packet(const Header &header, std::span<const std::uint8_t> payload,
-                    std::span<std::uint8_t> output, std::size_t &written_bytes)
+                    std::span<std::uint8_t> output, size_t &written_bytes)
 {
     written_bytes = 0;
     size_t total_size = HEADER_SIZE + payload.size();
     if(!validate_header(header) || payload.size() != header.payload_length ||
         output.size() < total_size) 
-    {
         return false;
-    }
-    if(!serialize_header(header, output)) {return false;}
+
+    if(!serialize_header(header, output)) 
+        return false;
+
     std::memcpy(output.data() + HEADER_SIZE, payload.data(), payload.size());
     written_bytes = total_size;
     return true;
@@ -129,31 +130,58 @@ bool parse_packet(std::span<const std::uint8_t> frame, Header& header,
                     std::span<const std::uint8_t>& payload)
 {
     payload = {};
-    if(!deserialize_header(frame, header) || !validate_header(header)) {return false;}
-    if(HEADER_SIZE + header.payload_length != frame.size()) {return false;}
+    if(!deserialize_header(frame, header) || !validate_header(header)) 
+        return false;
+    if(HEADER_SIZE + header.payload_length != frame.size()) 
+        return false;
     payload = frame.subspan(HEADER_SIZE, header.payload_length);
     return true;
 }
 
-bool build_fragment(const Header& header, std::span<const std::uint8_t> payload,
-                    std::size_t max_frame_size, std::uint8_t fragment_index,
-                    std::span<std::uint8_t> output, std::size_t& written_bytes)
+bool build_frames(PktType type, std::uint16_t seq, std::span<const std::uint8_t> payload,
+                    size_t max_frame_size, std::span<std::uint8_t> output, FramesInfo &fInfo)
 {
-    written_bytes = 0;
-    if (!validate_header(header)) {return false;}
-    if (max_frame_size <= HEADER_SIZE || payload.size() != header.total_length ||
-        payload.size() > MAX_MESSAGE_SIZE)
-    {
+    fInfo = {};
+    size_t output_offset = 0;
+    if(max_frame_size < HEADER_SIZE || payload.size() > MAX_MESSAGE_SIZE) 
         return false;
-    }
     const size_t max_payload_size = max_frame_size - HEADER_SIZE;
-    const std::size_t fragment_count = payload.empty() ? 1
-                                        : (payload.size() + max_payload_size - 1) / max_payload_size;
-    if(fragment_count > MAX_FRAGMENT_COUNT) {return false;}
-    if (fragment_index >= fragment_count) {return false;}
-    const size_t offset = fragment_index * max_payload_size;
-    const std::size_t remaining = payload.size() - offset;
-    const std::size_t fragment_size = std::min(remaining, max_payload_size);
+    if (!payload.empty() && max_payload_size == 0) 
+        return false;
+    const size_t frame_count = payload.empty() ? 1 : 1 + (payload.size() - 1) / max_payload_size;
+    if (frame_count > MAX_FRAGMENT_COUNT) 
+        return false;
+    const size_t required_size = payload.size() + frame_count * HEADER_SIZE;
+    if (output.size() < required_size) 
+        return false;
+    for (size_t i = 0; i < frame_count; ++i)
+    {
+        const size_t offset = i * max_payload_size;
+        const size_t remaining = payload.size() - offset;
+        const size_t fragment_size = std::min(remaining, max_payload_size);
+        const size_t frame_size = HEADER_SIZE + fragment_size;
+        size_t frame_written = 0;
+        Header header{
+            type,
+            seq,
+            static_cast<uint8_t>(i),
+            static_cast<uint8_t>(frame_count),
+            static_cast<uint16_t>(payload.size()),
+            static_cast<uint16_t>(fragment_size)
+        };
+        auto fragment_payload = payload.subspan(offset, fragment_size);
+        auto frame_output = output.subspan(output_offset, frame_size);
+        if(!build_packet(header, fragment_payload, frame_output, frame_written))
+        {
+            fInfo = {};
+            return false;
+        } 
+            
+        fInfo.frame_sizes[i] = frame_written;
+        output_offset += frame_written;
+    }
+    fInfo.frame_count = frame_count;
+    fInfo.written_bytes = output_offset;
     return true;
 }
 

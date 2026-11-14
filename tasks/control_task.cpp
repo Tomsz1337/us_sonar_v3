@@ -32,22 +32,22 @@ namespace
             {
                 switch (cmd)
                 {
-                    case protocol::CmdId::RDY:
+                    case protocol::CmdId::HELLO:
                         state = DeviceState::IDLE;
                         break;
 
-                    case protocol::CmdId::STOP:
+                    case protocol::CmdId::STOP_SONAR:
                         sonar_task_stop();
                         break;
 
-                    case protocol::CmdId::SENSOR:
+                    case protocol::CmdId::REQUEST_TELEMETRY:
                         if (state == DeviceState::IDLE)
                         {
                             telemetry_task_request();
                         }
                         break;
 
-                    case protocol::CmdId::US:
+                    case protocol::CmdId::START_SONAR:
                         if (state == DeviceState::IDLE)
                         {
                             sonar_task_start();

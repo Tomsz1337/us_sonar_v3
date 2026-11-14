@@ -6,12 +6,12 @@
 
 namespace protocol {
 
-constexpr std::size_t SONAR_SAMPLES = 1000;
-constexpr std::size_t MAX_SONAR_SIZE =
+constexpr size_t SONAR_SAMPLES = 1000;
+constexpr size_t MAX_SONAR_SIZE =
     SONAR_SAMPLES * sizeof(uint16_t);
 
-constexpr std::size_t MAX_FRAGMENT_COUNT = 255;
-constexpr std::size_t MAX_MESSAGE_SIZE = 65535;
+constexpr size_t MAX_FRAGMENT_COUNT = 255;
+constexpr size_t MAX_MESSAGE_SIZE = 65535;
 
 // =========================
 // PACKET TYPES
@@ -77,6 +77,15 @@ struct Header {
     uint16_t payload_length{0};
 };
 
+// =========================
+// FRAME INFO
+// =========================
+struct FramesInfo {
+    std::array<size_t, MAX_FRAGMENT_COUNT> frame_sizes{};
+    size_t frame_count{0};
+    size_t written_bytes{0};
+};
+
 constexpr size_t HEADER_SIZE = 9;
 
 static_assert(HEADER_SIZE == 9);
@@ -89,17 +98,16 @@ bool deserialize_header(std::span<const std::uint8_t> buffer,
 bool build_packet(const Header &header,
                     std::span<const std::uint8_t> payload,
                     std::span<std::uint8_t> output,
-                    std::size_t &written_bytes);
+                    size_t &written_bytes);
 bool parse_packet(std::span<const std::uint8_t> frame,
                     Header& header,
                     std::span<const std::uint8_t>& payload);
-bool build_fragment(const Header& header,
+bool build_frames(PktType type,
+                    std::uint16_t seq,
                     std::span<const std::uint8_t> payload,
-                    std::size_t max_frame_size,
-                    std::uint8_t fragment_index,
+                    size_t max_frame_size,
                     std::span<std::uint8_t> output,
-                    std::size_t& written_bytes
-);
+                    FramesInfo &fInfo);
 // =========================
 // FULL PACKET
 // =========================

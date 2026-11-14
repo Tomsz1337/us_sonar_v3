@@ -18,10 +18,10 @@ public:
     bool init();
     void process_rx();
     void handle_rx(std::span<const uint8_t> rx_data);
-    bool send_ack(protocol::CmdId cmd_id);
-    bool send_telemetry(std::span<const uint16_t> data);
-    bool send_gps(std::span<const uint16_t> data);
-    bool send_sonar(std::span<const uint16_t> data);
+    bool send_ack(uint16_t seq);
+    bool send_telemetry(std::span<const uint16_t> data, uint16_t seq);
+    bool send_gps(std::span<const uint16_t> data, uint16_t seq);
+    bool send_sonar(std::span<const uint16_t> data, uint16_t seq);
     void set_connected();
     bool receive_cmd(protocol::CmdId &cmd, TickType_t wait_ticks = 0);
 
@@ -31,7 +31,7 @@ private:
     uint16_t m_tx_seq{0};
     bool m_is_connected{false};
 
-    std::array<uint8_t, protocol::HEADER_SIZE + protocol::MAX_PAYLOAD_SIZE> m_tx_buffer{};
+    std::array<uint8_t, 4096> m_tx_buffer{};
 
-    bool send_packet(protocol::PktType type, protocol::CmdId id, std::span<const uint8_t> payload);
+    bool send_data(protocol::PktType type, uint16_t seq, std::span<const uint8_t> payload);
 };

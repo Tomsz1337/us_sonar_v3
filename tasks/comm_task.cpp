@@ -42,7 +42,7 @@ void vCommTask(void *pvParameters)
 
         while (g_comm.receive_cmd(cmd))
         {
-            if (cmd == protocol::CmdId::RDY)
+            if (cmd == protocol::CmdId::HELLO)
             {
                 g_comm.set_connected();
             }
@@ -54,6 +54,7 @@ void vCommTask(void *pvParameters)
         }
 
         DataPacket packet;
+        uint16_t seq = 0;
 
         while (data_queue_receive(packet, 0))
         {
@@ -64,16 +65,16 @@ void vCommTask(void *pvParameters)
 
             switch (packet.type)
             {
-                case protocol::PktType::SENSOR:
-                    g_comm.send_telemetry(samples);
+                case protocol::PktType::TELEMETRY:
+                    g_comm.send_telemetry(samples, seq);
                     break;
 
                 case protocol::PktType::SONAR:
-                    g_comm.send_sonar(samples);
+                    g_comm.send_sonar(samples, seq);
                     break;
 
                 case protocol::PktType::GPS:
-                    g_comm.send_gps(samples);
+                    g_comm.send_gps(samples, seq);
                     break;
 
                 default:

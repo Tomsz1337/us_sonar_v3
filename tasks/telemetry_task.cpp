@@ -33,7 +33,7 @@ void vTelemetryTask(void *pvParameters)
     {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         DataPacket sensorData{
-            protocol::PktType::SENSOR,
+            protocol::PktType::TELEMETRY,
             5,
             samples
         };

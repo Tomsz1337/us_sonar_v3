@@ -24,7 +24,7 @@ bool CommService::init()
 
 void CommService::process_rx() 
 {
-    std::array<uint8_t, protocol::HEADER_SIZE + protocol::MAX_PAYLOAD_SIZE> rx_buffer{};
+    std::array<uint8_t, protocol::HEADER_SIZE + sizeof(protocol::CmdId)> rx_buffer{};
     size_t received_bytes = 0;
 
     if(m_transport.receive(rx_buffer, received_bytes) && received_bytes > 0) 
@@ -36,68 +36,64 @@ void CommService::process_rx()
 void CommService::handle_rx(std::span<const uint8_t> rx_data) 
 {
     if(rx_data.size() < protocol::HEADER_SIZE) 
-    {
         return; 
-    }
 
     protocol::Header header{};
-    std::memcpy(&header, rx_data.data(), protocol::HEADER_SIZE);
-
-    if(protocol::HEADER_SIZE + header.len != rx_data.size())
+    std::span<const uint8_t> payload;
+    if (!protocol::parse_packet(rx_data, header, payload))
         return;
 
-    if(header.type != protocol::PktType::CMD)
+    if(header.type != protocol::PktType::COMMAND)
         return;
 
-    const auto cmd = static_cast<protocol::CmdId>(header.id);
+    if (payload.size() != 1)
+        return;
+
+    const auto cmd = static_cast<protocol::CmdId>(payload[0]);
 
     if(xQueueSend(m_cmd_queue, &cmd, 0) != pdPASS)
-    {
         return;
-    }
-    send_ack(cmd);
+
+    send_ack(header.seq);
 }
 
-bool CommService::send_packet(protocol::PktType type, protocol::CmdId id, std::span<const uint8_t> payload) 
+bool CommService::send_data(protocol::PktType type, uint16_t seq, std::span<const uint8_t> payload) 
 {
-    const size_t total_size = protocol::HEADER_SIZE + payload.size();
+    protocol::FramesInfo fInfo = {};
+    size_t offset = 0;  
 
-    if(total_size > m_tx_buffer.size()) 
+    if(!protocol::build_frames(type, seq, payload, m_transport.max_frame_size(), m_tx_buffer, fInfo))
+        return false;
+
+    for(int i = 0; i < fInfo.frame_count; ++i)
     {
-        return false; 
+        m_transport.send(std::span<const uint8_t>(m_tx_buffer.data() + offset, fInfo.frame_sizes[i]));
+        offset += fInfo.frame_sizes[i];
     }
-
-    protocol::Header header(type, id, m_tx_seq++, static_cast<uint16_t>(payload.size()));
-    std::memcpy(m_tx_buffer.data(), &header, protocol::HEADER_SIZE);
-
-    if (!payload.empty()) 
-    {
-        std::memcpy(m_tx_buffer.data() + protocol::HEADER_SIZE, payload.data(), payload.size());
-    }
-    return m_transport.send(std::span<const uint8_t>(m_tx_buffer.data(), total_size));
+    return true;
 }
 
-bool CommService::send_ack(protocol::CmdId cmd_id) 
+bool CommService::send_ack(uint16_t seq) 
 {
-    return send_packet(protocol::PktType::ACK, cmd_id, {});
+    return send_data(protocol::PktType::ACK, seq, {});
 }
 
-bool CommService::send_telemetry(std::span<const uint16_t> data) 
+bool CommService::send_telemetry(std::span<const uint16_t> data, uint16_t seq) 
 {
     auto bytes_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(data.data()), data.size_bytes());
-    return send_packet(protocol::PktType::SENSOR, protocol::CmdId::NONE, bytes_span);
+    return send_data(protocol::PktType::TELEMETRY, seq, bytes_span);
 }
 
-bool CommService::send_gps(std::span<const uint16_t> data) 
+bool CommService::send_gps(std::span<const uint16_t> data, uint16_t seq) 
 {
     auto bytes_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(data.data()), data.size_bytes());
-    return send_packet(protocol::PktType::GPS, protocol::CmdId::NONE, bytes_span);
+    return send_data(protocol::PktType::GPS, seq, bytes_span);
 }
 
-bool CommService::send_sonar(std::span<const uint16_t> data) 
+bool CommService::send_sonar(std::span<const uint16_t> data, uint16_t seq) 
 {
     auto bytes_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(data.data()), data.size_bytes());
-    return send_packet(protocol::PktType::SONAR, protocol::CmdId::NONE, bytes_span);
+    return send_data(protocol::PktType::SONAR, seq, bytes_span);
 }
 
 void CommService::set_connected()
