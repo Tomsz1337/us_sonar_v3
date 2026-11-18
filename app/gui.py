@@ -8,47 +8,7 @@ import pyqtgraph.exporters
 from PyQt6 import QtCore, QtWidgets
 from scipy.signal import medfilt
 
-# =========================
-# PROTOCOL CONSTANTS
-# =========================
-HEADER_FORMAT = "<BHBBHH"
-HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
-MAX_MESSAGE_SIZE = 65535
-MAX_FRAGMENT_COUNT = 255
-
-COMMAND     = 1
-ACK         = 2
-NACK        = 3
-EVENT       = 4
-TELEMETRY   = 5
-SONAR       = 6
-GPS         = 7
-PING        = 8
-PONG        = 9
-
-
-CMD_NONE                = 0
-CMD_HELLO               = 1
-CMD_START_SONAR         = 2
-CMD_STOP_SONAR          = 3
-CMD_REQUEST_TELEMETRY   = 4
-CMD_REINITIALIZE        = 5
-
-
-PKT_NAMES = {
-    COMMAND: "COMMAND",
-    ACK: "ACK",
-    NACK: "NACK",
-    EVENT: "EVENT",
-    TELEMETRY: "TELEMETRY",
-    SONAR: "SONAR",
-    GPS: "GPS",
-    PING: "PING",
-    PONG: "PONG"
-}
-
-SEQ = 0
 
 # =========================
 # CONFIG PARAMS
@@ -74,24 +34,8 @@ data = np.zeros((NUM_SAMPLES, MAX_COLS), dtype=np.uint16)
 # =========================
 # HELPER FUNCTIONS
 # =========================
-def parse_packet(data_bytes: bytes):
-    if len(data_bytes) < HEADER_SIZE:
-        return None
-    ptype, seq, fragment_index, fragment_count, total_length, payload_length = struct.unpack_from(HEADER_FORMAT, data_bytes, 0)
-    if len(data_bytes) != HEADER_SIZE + payload_length:
-        return None
-    if (fragment_count == 0) or (fragment_index >= fragment_count ) or (payload_length > total_length) or (total_length > MAX_MESSAGE_SIZE):
-        return None
-    if fragment_count == 1 and (fragment_index != 0 or payload_length != total_length):
-        return None
-    if fragment_count > 1 and payload_length == 0:
-        return None
-    
-    payload = data_bytes[HEADER_SIZE:HEADER_SIZE + payload_length]
 
-    return ptype, seq, fragment_index, fragment_count, total_length, payload
 
-def reassemble_packet()
 
 def send_cmd(cmd_id):
     global SEQ
