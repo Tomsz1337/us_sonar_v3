@@ -80,7 +80,12 @@ class Reassembler:
         packet = parse_packet(data_bytes)
         if packet is None:
             return False
+        
         ptype, seq, fragment_index, fragment_count, total_length, payload = packet
+
+        if self.active and self.seq != seq:
+            self.reset()
+
         if not self.active: 
             self.ptype = ptype
             self.seq = seq
@@ -90,9 +95,10 @@ class Reassembler:
             self.fragments_received += 1
             self.active = True
         else:
-            if self.ptype != ptype or self.seq != seq or self.fragment_count != fragment_count or self.total_length != total_length:
+            if self.ptype != ptype or self.fragment_count != fragment_count or self.total_length != total_length:
                 self.reset()
                 return False
+            
             if fragment_index in self.fragments_payload:
                 if self.fragments_payload[fragment_index] == payload:
                     return None
@@ -112,4 +118,5 @@ class Reassembler:
 
             self.reset()
             return complete_payload
+        
         return None
